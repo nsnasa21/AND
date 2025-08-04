@@ -1,0 +1,331 @@
+<!-- templates/edit_api_setting.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Edit API Setting</h1>
+    <a href="{% url 'api_settings' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to API Settings
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex align-items-center">
+                {% if api_setting.name == 'NewsAPI' %}
+                    <i class="bi bi-newspaper me-2 fs-4 text-primary"></i>
+                {% elif api_setting.name == 'GNews' %}
+                    <i class="bi bi-globe me-2 fs-4 text-success"></i>
+                {% elif api_setting.name == 'Twitter' %}
+                    <i class="bi bi-twitter me-2 fs-4 text-info"></i>
+                {% elif api_setting.name == 'Reddit' %}
+                    <i class="bi bi-reddit me-2 fs-4 text-danger"></i>
+                {% else %}
+                    <i class="bi bi-plug me-2 fs-4 text-secondary"></i>
+                {% endif %}
+                <h5 class="card-title mb-0">Edit {{ api_setting.name }} API</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="name" value="{{ api_setting.name }}">
+                    
+                    <div class="mb-4">
+                        <div class="form-label fw-bold d-flex align-items-center">
+                            <i class="bi bi-key me-2 text-primary"></i> API Key
+                        </div>
+                        <div class="input-group">
+                            <input type="password" class="form-control form-control-lg" 
+                                   value="{{ api_setting.api_key }}" 
+                                   name="api_key"
+                                   id="api_key"
+                                   placeholder="Enter API key" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="form-text text-muted mt-2">
+                            {% if api_setting.name == 'NewsAPI' %}
+                                Your NewsAPI API key. Get one at <a href="https://newsapi.org/" target="_blank">newsapi.org</a>.
+                                Free tier: 100 requests/day.
+                            {% elif api_setting.name == 'GNews' %}
+                                Your GNews API key. Get one at <a href="https://gnews.io/" target="_blank">gnews.io</a>.
+                                Free tier: 50 requests/day.
+                            {% elif api_setting.name == 'Twitter' %}
+                                Your Twitter API key. Requires a Twitter developer account.
+                                Visit <a href="https://developer.twitter.com/" target="_blank">developer.twitter.com</a> to get started.
+                            {% elif api_setting.name == 'Reddit' %}
+                                Your Reddit API credentials. Visit <a href="https://www.reddit.com/wiki/api" target="_blank">reddit.com/wiki/api</a> 
+                                to create an application and get your client ID and secret.
+                            {% else %}
+                                Enter the API key for {{ api_setting.name }}.
+                            {% endif %}
+                        </div>
+                        {% if form.api_key.errors %}
+                            <div class="invalid-feedback d-block mt-2">
+                                {% for error in form.api_key.errors %}
+                                    <div><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" 
+                                   id="isActive" name="is_active" 
+                                   {% if api_setting.is_active %}checked{% endif %}>
+                            <label class="form-check-label fw-bold" for="isActive">
+                                <i class="bi bi-power me-1"></i> API Status
+                            </label>
+                            <div class="form-text text-muted ms-4">
+                                {% if api_setting.is_active %}
+                                    <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> This API is currently <strong>ACTIVE</strong> and will be used for news aggregation.</span>
+                                {% else %}
+                                    <span class="text-secondary"><i class="bi bi-dash-circle-fill me-1"></i> This API is currently <strong>INACTIVE</strong> and will not be used for news aggregation.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-5">
+                        <a href="{% url 'api_settings' %}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="bi bi-info-circle me-2"></i> API Documentation
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if api_setting.name == 'NewsAPI' %}
+                    <h6 class="fw-bold mb-3">NewsAPI Documentation</h6>
+                    <p class="mb-3">NewsAPI is a simple and easy-to-use API that returns JSON metadata for headlines and articles live all over the web now.</p>
+                    
+                    <div class="mb-3">
+                        <a href="https://newsapi.org/docs" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                            <i class="bi bi-book me-1"></i> Official Documentation
+                        </a>
+                        <p class="text-muted small">The complete API reference with examples and usage limits.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <a href="https://newsapi.org/register" target="_blank" class="btn btn-sm btn-outline-success mb-2">
+                            <i class="bi bi-key me-1"></i> Get API Key
+                        </a>
+                        <p class="text-muted small">Sign up for a free account to get your API key (100 requests/day).</p>
+                    </div>
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i> 
+                        <strong>Tip:</strong> NewsAPI free tier limits you to 100 requests per day. Consider adding multiple APIs to ensure continuous news aggregation.
+                    </div>
+                    
+                {% elif api_setting.name == 'GNews' %}
+                    <h6 class="fw-bold mb-3">GNews Documentation</h6>
+                    <p class="mb-3">GNews API is a news API that returns the latest news from all over the web based on your query.</p>
+                    
+                    <div class="mb-3">
+                        <a href="https://gnews.io/docs" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                            <i class="bi bi-book me-1"></i> Official Documentation
+                        </a>
+                        <p class="text-muted small">Complete API documentation including endpoints and parameters.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <a href="https://gnews.io/" target="_blank" class="btn btn-sm btn-outline-success mb-2">
+                            <i class="bi bi-key me-1"></i> Get API Key
+                        </a>
+                        <p class="text-muted small">Register for a free account to get your API key (50 requests/day).</p>
+                    </div>
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i> 
+                        <strong>Tip:</strong> GNews free tier has a limit of 50 requests per day. The API supports multiple languages and sources.
+                    </div>
+                    
+                {% elif api_setting.name == 'Twitter' %}
+                    <h6 class="fw-bold mb-3">Twitter API Documentation</h6>
+                    <p class="mb-3">Access Twitter's social media platform to gather news from trending topics and accounts.</p>
+                    
+                    <div class="mb-3">
+                        <a href="https://developer.twitter.com/en/docs/twitter-api" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                            <i class="bi bi-book me-1"></i> Official Documentation
+                        </a>
+                        <p class="text-muted small">Twitter API v2 documentation for accessing tweets and user data.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" class="btn btn-sm btn-outline-success mb-2">
+                            <i class="bi bi-gear me-1"></i> Developer Portal
+                        </a>
+                        <p class="text-muted small">Create a project and app to get your API keys and tokens.</p>
+                    </div>
+                    
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle me-1"></i> 
+                        <strong>Note:</strong> Twitter API requires approval for elevated access levels. The free tier has limited functionality.
+                    </div>
+                    
+                {% elif api_setting.name == 'Reddit' %}
+                    <h6 class="fw-bold mb-3">Reddit API Documentation</h6>
+                    <p class="mb-3">Access Reddit's social news aggregation platform to gather trending news and discussions.</p>
+                    
+                    <div class="mb-3">
+                        <a href="https://www.reddit.com/dev/api/" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                            <i class="bi bi-book me-1"></i> Official Documentation
+                        </a>
+                        <p class="text-muted small">Complete Reddit API documentation for accessing subreddits and posts.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <a href="https://www.reddit.com/prefs/apps/" target="_blank" class="btn btn-sm btn-outline-success mb-2">
+                            <i class="bi bi-gear me-1"></i> App Preferences
+                        </a>
+                        <p class="text-muted small">Create a new application to get your client ID and secret.</p>
+                    </div>
+                    
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i> 
+                        <strong>Tip:</strong> When creating a Reddit app, select "script" as the application type for easiest setup.
+                    </div>
+                    
+                {% else %}
+                    <h6 class="fw-bold mb-3">{{ api_setting.name }} Documentation</h6>
+                    <p class="mb-3">Documentation and resources for configuring the {{ api_setting.name }} API.</p>
+                    
+                    <div class="mb-3">
+                        <a href="#" class="btn btn-sm btn-outline-primary mb-2 disabled">
+                            <i class="bi bi-book me-1"></i> Documentation
+                        </a>
+                        <p class="text-muted small">Documentation for this API is not currently available in our system.</p>
+                    </div>
+                    
+                    <div class="alert alert-secondary small">
+                        <i class="bi bi-info-circle me-1"></i> 
+                        <strong>Note:</strong> For custom APIs, ensure you've entered the correct API key format and permissions.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card shadow-sm sticky-top" style="top: 70px;">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="bi bi-shield-lock me-2"></i> Security Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-1"></i> 
+                    <strong>API Key Security</strong>
+                </div>
+                
+                <p class="mb-3">Your API keys are stored securely in the database with encryption. However, please follow these best practices:</p>
+                
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex">
+                        <i class="bi bi-shield-check text-success me-2"></i>
+                        <div>Never share your API keys publicly</div>
+                    </li>
+                    <li class="list-group-item d-flex">
+                        <i class="bi bi-shield-check text-success me-2"></i>
+                        <div>Use unique keys for different applications</div>
+                    </li>
+                    <li class="list-group-item d-flex">
+                        <i class="bi bi-shield-check text-success me-2"></i>
+                        <div>Rotate keys periodically for security</div>
+                    </li>
+                    <li class="list-group-item d-flex">
+                        <i class="bi bi-exclamation-diamond text-warning me-2"></i>
+                        <div>Do not commit API keys to version control</div>
+                    </li>
+                </ul>
+                
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    This application stores your API keys securely using Django's built-in security features. 
+                    They are never exposed in client-side code or logs.
+                </div>
+            </div>
+        </div>
+        
+        {% if api_setting.name == 'NewsAPI' or api_setting.name == 'GNews' %}
+        <div class="card shadow-sm mt-4 sticky-top" style="top: 70px;">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="bi bi-graph-up me-2"></i> Usage Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Requests today:</span>
+                    <span class="fw-bold">42/100</span>
+                </div>
+                <div class="progress mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 42%"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Requests this week:</span>
+                    <span class="fw-bold">287/700</span>
+                </div>
+                <div class="progress mb-3" style="height: 10px;">
+                    <div class="progress-bar bg-info" role="progressbar" style="width: 41%"></div>
+                </div>
+                
+                <div class="alert alert-light small border">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Usage resets at midnight UTC. Monitor your usage to avoid hitting API limits.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('api_key');
+        const toggleButton = document.getElementById('togglePassword');
+        
+        toggleButton.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+        
+        // Update status text when toggle is changed
+        document.getElementById('isActive').addEventListener('change', function() {
+            const statusText = document.querySelector('.form-text span');
+            if (this.checked) {
+                statusText.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> This API is currently <strong>ACTIVE</strong> and will be used for news aggregation.</span>';
+            } else {
+                statusText.innerHTML = '<span class="text-secondary"><i class="bi bi-dash-circle-fill me-1"></i> This API is currently <strong>INACTIVE</strong> and will not be used for news aggregation.</span>';
+            }
+        });
+    });
+</script>
+{% endblock %}
