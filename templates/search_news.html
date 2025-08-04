@@ -1,0 +1,150 @@
+<!-- templates/search_news.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Search News</h1>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <select name="category" class="form-select" required>
+                <option value="">Select a Category</option>
+                {% for category in categories %}
+                    <option value="{{ category.pk }}" {% if selected_category.pk == category.pk %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </div>
+    </div>
+</form>
+
+{% if search_performed %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Filter Options</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="source" class="form-label">Source</label>
+                <input type="text" class="form-control" id="source" name="source" value="{{ source|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to|default:'' }}">
+            </div>
+            <div class="col-md-3">
+                <label for="show_duplicates" class="form-label">Show Duplicates</label>
+                <select class="form-select" id="show_duplicates" name="show_duplicates">
+                    <option value="">No</option>
+                    <option value="true" {% if show_duplicates %}selected{% endif %}>Yes</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-funnel"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<form method="post" action="{% url 'export_csv' %}" id="exportForm">
+    {% csrf_token %}
+    <div class="d-flex justify-content-between mb-3">
+        <h5>Search Results for: {{ selected_category.name }}</h5>
+        <div>
+            <button type="submit" formaction="{% url 'export_csv' %}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+            </button>
+            <button type="submit" formaction="{% url 'export_pdf' %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
+        </div>
+    </div>
+
+    {% if page_obj %}
+        {% for article in page_obj %}
+        <div class="card article-card mb-3">
+            <div class="card-body">
+                <div class="form-check float-end">
+                    <input class="form-check-input" type="checkbox" name="selected_articles" value="{{ article.pk }}" id="article{{ article.pk }}">
+                </div>
+                <h5 class="card-title">
+                    <a href="{{ article.url }}" target="_blank" class="text-decoration-none">
+                        {{ article.title }}
+                    </a>
+                </h5>
+                <p class="card-text">{{ article.description|truncatewords:30 }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            <i class="bi bi-newspaper"></i> {{ article.source }} | 
+                            <i class="bi bi-calendar"></i> {{ article.published_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    <button id="duplicate-btn-{{ article.pk }}" 
+                            class="btn btn-sm {% if article.is_duplicate %}btn-warning{% else %}btn-outline-warning{% endif %}" 
+                            onclick="toggleDuplicate({{ article.pk }})">
+                        {% if article.is_duplicate %}
+                            <i class="bi bi-flag-fill"></i> Marked as Duplicate
+                        {% else %}
+                            <i class="bi bi-flag"></i> Mark as Duplicate
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No articles found for this category.
+        </div>
+    {% endif %}
+</form>
+{% endif %}
+{% endblock %}
