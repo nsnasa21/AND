@@ -1,0 +1,10 @@
+django
+requests
+feedparser
+python-decouple
+weasyprint
+pandas
+praw
+tweepy
+newsapi-python
+gnews
