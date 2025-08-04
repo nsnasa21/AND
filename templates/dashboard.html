@@ -1,0 +1,69 @@
+<!-- templates/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Categories</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ categories.count }}</h5>
+                <p class="card-text">Manage your news categories</p>
+                <a href="{% url 'categories' %}" class="btn btn-light btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Latest Articles</div>
+            <div class="card-body">
+                <h5 class="card-title">{{ articles.count }}</h5>
+                <p class="card-text">Recently collected news</p>
+                <a href="{% url 'search_news' %}" class="btn btn-light btn-sm">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Sources</div>
+            <div class="card-body">
+                <h5 class="card-title">RSS & APIs</h5>
+                <p class="card-text">Configure your news sources</p>
+                <a href="{% url 'api_settings' %}" class="btn btn-light btn-sm">Configure</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Recent Articles</h5>
+            </div>
+            <div class="card-body">
+                {% if articles %}
+                    <div class="list-group">
+                        {% for article in articles %}
+                            <a href="{{ article.url }}" target="_blank" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ article.title }}</h6>
+                                    <small>{{ article.published_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-1">{{ article.description|truncatewords:20 }}</p>
+                                <small class="text-muted">{{ article.source }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No articles found. Start by adding categories and keywords.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
