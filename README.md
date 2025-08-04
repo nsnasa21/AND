@@ -1,4 +1,4 @@
-# AND
+# Advanced News Dashboard
 # News Aggregator
 
 A dynamic news aggregation tool with a beautiful UI that allows users to organize news by categories, topics, and keywords.
