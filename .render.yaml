@@ -1,0 +1,23 @@
+# .render.yaml
+services:
+  - type: web
+    name: news-aggregator
+    runtime: python
+    envVars:
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: news-aggregator-db
+          property: connectionString
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn news_aggregator_project.wsgi"
+    envVarSecrets:
+      - key: ALLOWED_HOSTS
+        value: "['your-service-name.onrender.com']"
+databases:
+  - name: news-aggregator-db
+    databaseName: news_aggregator
+    user: news_aggregator_user
