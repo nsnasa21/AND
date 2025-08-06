@@ -1,0 +1,377 @@
+<!-- templates/topics.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Topics Management</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTopicModal">
+        <i class="bi bi-plus-circle"></i> Add Topic
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Topics</h5>
+                <span class="text-muted">{{ topics.count }} topic{{ topics.count|pluralize }} configured</span>
+            </div>
+            <div class="card-body">
+                {% if topics %}
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="topicSearch" placeholder="Search topics by name or category...">
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Topic</th>
+                                    <th>Category</th>
+                                    <th>Keywords</th>
+                                    <th>Articles</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for topic in topics %}
+                                    <tr class="topic-row" data-topic="{{ topic.name|lower }} {{ topic.category.name|lower }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-tag me-2 fs-4 text-primary"></i>
+                                                <div>
+                                                    <strong>{{ topic.name }}</strong>
+                                                    {% if topic.description %}
+                                                        <div class="text-muted small">{{ topic.description|truncatechars:50 }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary rounded-pill px-3 py-2">{{ topic.category.name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark rounded-pill px-3 py-2">
+                                                {{ topic.keywords.count }} keywords
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                {{ topic.article_set.count }} articles
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'keywords' %}?topic={{ topic.pk }}" 
+                                                   class="btn btn-sm btn-outline-info"
+                                                   title="Manage keywords">
+                                                    <i class="bi bi-key"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#editTopicModal{{ topic.pk }}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <a href="{% url 'delete_topic' topic.pk %}" 
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   onclick="return confirm('Are you sure you want to delete this topic? This will also delete all associated keywords.');"
+                                                   title="Delete topic">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Edit Topic Modal -->
+                                    <div class="modal fade" id="editTopicModal{{ topic.pk }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit {{ topic.name }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form method="post" action="{% url 'edit_topic' topic.pk %}">
+                                                    {% csrf_token %}
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Topic Name</label>
+                                                            <input type="text" class="form-control" 
+                                                                   name="name" 
+                                                                   value="{{ topic.name }}" 
+                                                                   placeholder="Enter topic name" 
+                                                                   required>
+                                                            <div class="form-text text-muted">
+                                                                A descriptive name for this topic (e.g., "Artificial Intelligence")
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold">Category</label>
+                                                            <select class="form-select" name="category" required>
+                                                                {% for category in categories %}
+                                                                    <option value="{{ category.pk }}" {% if topic.category.pk == category.pk %}selected{% endif %}>
+                                                                        {{ category.name }}
+                                                                    </option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <div class="form-text text-muted">
+                                                                Select which category this topic belongs to
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5 class="mb-3">Topic Hierarchy Overview</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-primary">
+                                    <div class="card-body text-center">
+                                        <div class="display-4 text-primary mb-3">
+                                            <i class="bi bi-folder"></i>
+                                        </div>
+                                        <h5 class="card-title">Categories</h5>
+                                        <p class="card-text text-muted">Broad subject areas like Technology, Politics, or Sports</p>
+                                        <div class="d-flex justify-content-center align-items-center text-primary">
+                                            <i class="bi bi-plus-circle me-2"></i>
+                                            <span>{{ categories.count }} categories</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-success">
+                                    <div class="card-body text-center">
+                                        <div class="display-4 text-success mb-3">
+                                            <i class="bi bi-tags"></i>
+                                        </div>
+                                        <h5 class="card-title">Topics</h5>
+                                        <p class="card-text text-muted">Specific subjects within categories like "AI" under Technology</p>
+                                        <div class="d-flex justify-content-center align-items-center text-success">
+                                            <i class="bi bi-plus-circle me-2"></i>
+                                            <span>{{ topics.count }} topics</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-info">
+                                    <div class="card-body text-center">
+                                        <div class="display-4 text-info mb-3">
+                                            <i class="bi bi-key"></i>
+                                        </div>
+                                        <h5 class="card-title">Keywords</h5>
+                                        <p class="card-text text-muted">Specific search terms that trigger news collection</p>
+                                        <div class="d-flex justify-content-center align-items-center text-info">
+                                            <i class="bi bi-plus-circle me-2"></i>
+                                            <span>
+                                                {% with total_keywords=0 %}
+                                                    {% for topic in topics %}
+                                                        {% get_total_keywords topic as topic_keywords %}
+                                                        {% add total_keywords topic_keywords to total_keywords %}
+                                                    {% endfor %}
+                                                    {{ total_keywords }}
+                                                {% endwith %}
+                                                keywords
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="alert alert-info d-flex">
+                            <i class="bi bi-info-circle fs-3 me-3"></i>
+                            <div>
+                                <h5 class="alert-heading">How Topics Work in This System</h5>
+                                <p class="mb-0">Topics serve as the middle layer between broad categories and specific keywords. 
+                                   When you search by category, the system searches for all keywords across all topics within that category.</p>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-tags display-3 text-muted mb-4"></i>
+                        <h5 class="mb-3">No topics configured yet</h5>
+                        <p class="text-muted mb-4">Topics are specific subjects within your categories that help organize your keywords.
+                           Before adding topics, you'll need to <a href="{% url 'categories' %}" class="link-primary">create categories</a> first.</p>
+                        
+                        <div class="d-flex justify-content-center gap-3 flex-wrap mb-4">
+                            <a href="{% url 'categories' %}" class="btn btn-outline-primary px-4 py-2">
+                                <i class="bi bi-folder me-2"></i>Create Categories
+                            </a>
+                            {% if categories %}
+                                <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#addTopicModal">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Your First Topic
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-4 offset-md-2 mb-3">
+                                <div class="card h-100 border-primary">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-primary text-white rounded-circle p-3 me-3">
+                                                <i class="bi bi-diagram-3 fs-4"></i>
+                                            </div>
+                                            <h6 class="card-title mb-0">Topic Structure</h6>
+                                        </div>
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex">
+                                                <i class="bi bi-check-circle text-success me-2"></i>
+                                                <div>1 Category = Multiple Topics</div>
+                                            </li>
+                                            <li class="list-group-item d-flex">
+                                                <i class="bi bi-check-circle text-success me-2"></i>
+                                                <div>1 Topic = Multiple Keywords</div>
+                                            </li>
+                                            <li class="list-group-item d-flex">
+                                                <i class="bi bi-check-circle text-success me-2"></i>
+                                                <div>Keywords drive news collection</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 border-success">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-success text-white rounded-circle p-3 me-3">
+                                                <i class="bi bi-lightbulb fs-4"></i>
+                                            </div>
+                                            <h6 class="card-title mb-0">Topic Examples</h6>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex mb-2">
+                                                <span class="badge bg-secondary me-2">Technology</span>
+                                                <span class="fw-bold">→</span>
+                                                <span class="ms-2">Artificial Intelligence</span>
+                                            </div>
+                                            <div class="text-muted small ms-4">Keywords: machine learning, neural networks, AI</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex mb-2">
+                                                <span class="badge bg-secondary me-2">Politics</span>
+                                                <span class="fw-bold">→</span>
+                                                <span class="ms-2">Elections</span>
+                                            </div>
+                                            <div class="text-muted small ms-4">Keywords: voting, candidates, ballot</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="d-flex">
+                                                <span class="badge bg-secondary me-2">Sports</span>
+                                                <span class="fw-bold">→</span>
+                                                <span class="ms-2">Soccer</span>
+                                            </div>
+                                            <div class="text-muted small ms-4">Keywords: football, premier league, world cup</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Topic Modal -->
+<div class="modal fade" id="addTopicModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Topic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% if not categories %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            You need to create at least one category before adding topics.
+                        </div>
+                        <div class="d-grid">
+                            <a href="{% url 'categories' %}" class="btn btn-primary">
+                                <i class="bi bi-folder me-2"></i>Create Category First
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Topic Name</label>
+                            <input type="text" class="form-control form-control-lg" 
+                                   name="name" 
+                                   placeholder="Enter topic name (e.g., 'Artificial Intelligence')" 
+                                   required>
+                            <div class="form-text text-muted">
+                                A specific subject within a category (e.g., "Artificial Intelligence" under "Technology")
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category</label>
+                            <select class="form-select form-select-lg" name="category" required>
+                                {% for category in categories %}
+                                    <option value="{{ category.pk }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text text-muted mt-2">
+                                Select which category this topic belongs to
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" {% if not categories %}disabled{% endif %}>Add Topic</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Topic search functionality
+        const searchInput = document.getElementById('topicSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('.topic-row');
+                
+                rows.forEach(row => {
+                    const topicData = row.dataset.topic;
+                    if (topicData.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
