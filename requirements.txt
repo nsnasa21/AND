@@ -1,5 +1,6 @@
 gunicorn
 django
+dj-database-url
 requests
 feedparser
 python-decouple
